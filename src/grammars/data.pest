@@ -1,0 +1,9 @@
+WHITESPACE = _{ "\t" | " " }
+number = @{ ASCII_DIGIT+ }
+float = @{ ( "-" | "+" )? ~ number ~ ( "." ~ number)? }
+mileage = { float }
+price = { float }
+record = { mileage ~ "," ~ price }
+_header = @{ "km" ~ "," ~ "price" }
+newline = _{ "\n" }
+csv_file = _{ ( SOI ~ _header ~ newline ) ~ ( ( record ~ ( newline ~ record )* ~ newline?) | ( record ~ newline? ) )? ~ EOI}

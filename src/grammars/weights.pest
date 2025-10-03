@@ -1,6 +1,6 @@
 WHITESPACE = _{ " " | "\t"}
-number = { ( "-" | "+" )? ~ ASCII_DIGIT+ }
-float = { number ~ ( "." ~ number+ )? }
+number = @{ ASCII_DIGIT+ }
+float = @{ ( "-" | "+" )? ~ number ~ ( "." ~ number+ )? }
 theta0 = { float }
 theta1 = { float }
 weights = _{ theta0 ~ "," ~ theta1 }

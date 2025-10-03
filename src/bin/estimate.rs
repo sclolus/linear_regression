@@ -6,7 +6,7 @@ use std::io::Write;
 use std::process;
 
 #[derive(Parser)]
-#[grammar = "src/weights.pest"]
+#[grammar = "src/grammars/weights.pest"]
 struct WeightParser;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
