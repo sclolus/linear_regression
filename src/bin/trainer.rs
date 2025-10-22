@@ -85,8 +85,8 @@ fn generate_plot(args: PlotArgs) -> Result<(), Box<dyn std::error::Error>> {
 		let theta0 = args.theta0;
 		let theta1 = args.theta1;
 
-		println!("{:?}",			vec![(min_mileage, theta0 + theta1 * min_mileage),
-			(max_mileage, theta0 + theta1 * max_mileage)]);
+		// println!("{:?}",	vec![(min_mileage, theta0 + theta1 * min_mileage),
+		// 	(max_mileage, theta0 + theta1 * max_mileage)]);
 		chart.draw_series(LineSeries::new(
 			vec![(min_mileage, theta0 + theta1 * min_mileage),
 			(max_mileage, theta0 + theta1 * max_mileage)],
@@ -208,14 +208,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 	let learning_rate = args.learning_rate;
 	let iterations = args.iterations;
-	println!("{:?}", entries);
-	println!("{:?}", args);
+	// println!("{:?}", entries);
+	// println!("{:?}", args);
 
 	let (normalized_entries, mileage_stats, price_stats): (Vec<Entry>, Stats, Stats) = normalize_entries(&entries);
-	println!("{:?}", normalized_entries);
+	// println!("{:?}", normalized_entries);
 	let (beta0, beta1) = linear_regression(&normalized_entries, learning_rate, iterations, None);
 	let (theta0, theta1) = denormalize_model_parameters(beta0, beta1, mileage_stats, price_stats);
-	println!("Regressed to (theta0, theta1): ({}, {})", theta0, theta1);
+	println!("Regressed to (theta0, theta1): ({}, {}) with {} iterations and learning rate = {}", theta0, theta1, iterations, learning_rate);
 
 	let weights_file_content = format!("{},{}", theta0, theta1);
 	let mut file = std::fs::OpenOptions::new().create(true).write(true).open("weights")?;
