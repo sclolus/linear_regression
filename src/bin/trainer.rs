@@ -21,8 +21,8 @@ struct Cli {
 	#[arg(short, long, default_value_t = 10000)]
 	iterations: usize,
 
-	#[arg(short, long, default_value = None)]
-	epsilon: Option<f64>,
+	// #[arg(short, long, default_value = None)]
+	// epsilon: Option<f64>,
 }
 
 struct PlotArgs<'a> {
@@ -119,7 +119,7 @@ fn denormalize_model_parameters(beta0: f64, beta1: f64, mileage_stats: Stats, pr
 	(theta0, theta1)
 }
 
-fn linear_regression(entries: &Vec<Entry>, learning_rate: f64, iterations: usize, epsilon: Option<f64>) -> (f64, f64) {
+fn linear_regression(entries: &Vec<Entry>, learning_rate: f64, iterations: usize) -> (f64, f64) {
 	let mut theta0 = 0.0;
 	let mut theta1 = 0.0;
 
@@ -156,7 +156,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 	let (normalized_entries, mileage_stats, price_stats): (Vec<Entry>, Stats, Stats) = normalize_entries(&entries);
 	// println!("{:?}", normalized_entries);
-	let (beta0, beta1) = linear_regression(&normalized_entries, learning_rate, iterations, None);
+	let (beta0, beta1) = linear_regression(&normalized_entries, learning_rate, iterations);
 	let (theta0, theta1) = denormalize_model_parameters(beta0, beta1, mileage_stats, price_stats);
 	println!("Regressed to (theta0, theta1): ({}, {}) with {} iterations and learning rate = {}", theta0, theta1, iterations, learning_rate);
 
