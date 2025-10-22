@@ -1,28 +1,9 @@
 use std::io::Write;
 
-use pest::Parser;
-use pest_derive::Parser;
+use ft_linear_regression::parsing::{Entry, Stats};
+use ft_linear_regression::parsing::data::parse_data_file;
+
 use clap::Parser as ClapParser;
-
-#[derive(Parser)]
-#[grammar = "./src/grammars/data.pest"]
-struct DataParser;
-
-#[derive(Debug)]
-struct Entry {
-    price: f64,
-    mileage: f64,
-}
-
-#[derive(Debug, Clone, Copy)]
-struct Stats {
-	mean: f64,
-
-	#[allow(dead_code)]
-	variance: f64,
-	
-	std: f64,
-}
 
 #[derive(ClapParser, Debug)]
 #[command(name = "trainer")]
@@ -165,46 +146,8 @@ fn linear_regression(entries: &Vec<Entry>, learning_rate: f64, iterations: usize
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
 	let args = Cli::parse();
-	
-	
-    let file_contents =
-        std::fs::read_to_string("data.csv").or(Err("Failed to read data.csv file"))?;
-    let pairs = DataParser::parse(Rule::csv_file, &file_contents)
-        .map_err(|e| format!("Failed to parse data.csv file: {}", e))?;
 
-    let mut entries: Vec<Entry> = Vec::with_capacity(128);
-    for pair in pairs.clone() {
-        // println!("-{:?}: {}", pair.as_rule(), pair.as_str());
-        match pair.as_rule() {
-            Rule::record => {
-                let mut price = 0.0;
-                let mut mileage = 0.0;
-
-                for pair in pair.into_inner() {
-					// println!("--{:?}: {}", pair.as_rule(), pair.as_str());
-                    match pair.as_rule() {
-                        Rule::mileage => {
-                            mileage = pair
-                                .as_str()
-                                .trim()
-                                .parse::<f64>()
-                                .map_err(|e| format!("Failed to parse mileage: {}", e))?
-                        }
-                        Rule::price => {
-                            price = pair
-                                .as_str()
-                                .trim()
-                                .parse::<f64>()
-                                .map_err(|e| format!("Failed to parse price: {}", e))?
-                        }
-                        _ => {}
-                    }
-                }
-				entries.push(Entry { price, mileage })
-            }
-            _ => {}
-        }
-    }
+	let entries = parse_data_file()?;
 
 	let learning_rate = args.learning_rate;
 	let iterations = args.iterations;
