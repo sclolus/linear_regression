@@ -21,6 +21,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("Mileage: {}", mileage);
     println!("theta0: {}, theta1: {}", theta0, theta1);
-    println!("Estimated price: {}", estimated_price);
+    println!("Estimated price: {:.2}", estimated_price);
     Ok(())
 }
