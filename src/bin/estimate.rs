@@ -39,8 +39,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             (theta0, theta1)
         }
         Err(e) => {
-            eprintln!("Failed to parse weights: {}", e);
-            process::exit(1)
+            eprintln!("Failed to parse weights: {}, using defaults", e);
+			(0.0, 0.0)
         }
     };
 
