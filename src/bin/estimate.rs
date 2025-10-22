@@ -3,7 +3,6 @@ use pest_derive::Parser;
 use std::fs;
 use std::io;
 use std::io::Write;
-use std::process;
 
 #[derive(Parser)]
 #[grammar = "src/grammars/weights.pest"]

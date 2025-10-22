@@ -1,3 +1,5 @@
+use std::io::Write;
+
 use pest::Parser;
 use pest_derive::Parser;
 use clap::Parser as ClapParser;
@@ -15,7 +17,10 @@ struct Entry {
 #[derive(Debug, Clone, Copy)]
 struct Stats {
 	mean: f64,
+
+	#[allow(dead_code)]
 	variance: f64,
+	
 	std: f64,
 }
 
@@ -29,7 +34,7 @@ struct Cli {
 	#[arg(short, long, default_value_t = false)]
 	plot: bool,
 	
-	#[arg(short, long, default_value_t = 0.001)]
+	#[arg(short, long, default_value_t = 0.1)]
 	learning_rate: f64,
 
 	#[arg(short, long, default_value_t = 10000)]
@@ -147,9 +152,11 @@ fn linear_regression(entries: &Vec<Entry>, learning_rate: f64, iterations: usize
 
 		theta0 -= learning_rate * (1.0 / m) * residuals_sum;
 		theta1 -= learning_rate * (1.0 / m) * residuals_times_theta1_sum;
+		// theta0 = learning_rate * (1.0 / m) * residuals_sum;
+		// theta1 = learning_rate * (1.0 / m) * residuals_times_theta1_sum;
 
-		let cost = 1.0 / (2.0 * (m as f64)) * entries.iter().map(|e| ((theta0 + theta1 * e.mileage) - e.price).powi(2)).sum::<f64>();
-		println!("Regressed to (theta0, theta1, cost): ({:32}, {:32}, {:32})", theta0, theta1, cost);
+		// let cost = 1.0 / (2.0 * (m as f64)) * entries.iter().map(|e| ((theta0 + theta1 * e.mileage) - e.price).powi(2)).sum::<f64>();
+		// println!("Regressed #{} to (theta0, theta1, cost): ({:32}, {:32}, {:32})", i, theta0, theta1, cost);
 		i += 1 ;
 	}
 
@@ -209,6 +216,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 	let (beta0, beta1) = linear_regression(&normalized_entries, learning_rate, iterations, None);
 	let (theta0, theta1) = denormalize_model_parameters(beta0, beta1, mileage_stats, price_stats);
 	println!("Regressed to (theta0, theta1): ({}, {})", theta0, theta1);
+
+	let weights_file_content = format!("{},{}", theta0, theta1);
+	let mut file = std::fs::OpenOptions::new().create(true).write(true).open("weights")?;
+	file.write_all(weights_file_content.as_bytes())?;
 	
 	let plot_data_only: bool = args.plot_data_only;
 	let plot: bool = args.plot;
