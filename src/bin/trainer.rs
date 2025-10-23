@@ -18,7 +18,7 @@ struct Cli {
 	#[arg(short, long, default_value_t = 0.1)]
 	learning_rate: f64,
 
-	#[arg(short, long, default_value_t = 10000)]
+	#[arg(short, long, default_value_t = 1000)]
 	iterations: usize,
 
 	#[arg(short, long, default_value = None)]
