@@ -21,8 +21,8 @@ struct Cli {
 	#[arg(short, long, default_value_t = 10000)]
 	iterations: usize,
 
-	// #[arg(short, long, default_value = None)]
-	// epsilon: Option<f64>,
+	#[arg(short, long, default_value = None)]
+	epsilon: Option<f64>,
 }
 
 struct PlotArgs<'a> {
@@ -119,29 +119,44 @@ fn denormalize_model_parameters(beta0: f64, beta1: f64, mileage_stats: Stats, pr
 	(theta0, theta1)
 }
 
-fn linear_regression(entries: &Vec<Entry>, learning_rate: f64, iterations: usize) -> (f64, f64) {
+fn linear_regression(entries: &Vec<Entry>, learning_rate: f64, iterations: usize, epsilon: Option<f64>) -> (f64, f64) {
+	let (normalized_entries, mileage_stats, price_stats): (Vec<Entry>, Stats, Stats) = normalize_entries(&entries);
+	// println!("{:?}", normalized_entries);
+
 	let mut theta0 = 0.0;
 	let mut theta1 = 0.0;
 
-	let m: f64 = entries.len() as f64;
+	let m: f64 = normalized_entries.len() as f64;
 
 	let mut i: usize = 0;
+	let mut old_cost: Option<f64> = None;
+	let mut cost: f64 = 0.0;
 	
 	while i < iterations {
-		let residuals_sum: f64 = entries.iter().map(|e| (theta0 + theta1 * e.mileage) - e.price).sum();
-		let residuals_times_theta1_sum: f64 = entries.iter().map(|e| ((theta0 + theta1 * e.mileage) - e.price) * e.mileage).sum();
+		let residuals_sum: f64 = normalized_entries.iter().map(|e| (theta0 + theta1 * e.mileage) - e.price).sum();
+		let residuals_times_theta1_sum: f64 = normalized_entries.iter().map(|e| ((theta0 + theta1 * e.mileage) - e.price) * e.mileage).sum();
 
 		theta0 -= learning_rate * (1.0 / m) * residuals_sum;
 		theta1 -= learning_rate * (1.0 / m) * residuals_times_theta1_sum;
 		// theta0 = learning_rate * (1.0 / m) * residuals_sum;
 		// theta1 = learning_rate * (1.0 / m) * residuals_times_theta1_sum;
 
-		// let cost = 1.0 / (2.0 * (m as f64)) * entries.iter().map(|e| ((theta0 + theta1 * e.mileage) - e.price).powi(2)).sum::<f64>();
+		cost = 1.0 / (2.0 * (m as f64)) * normalized_entries.iter().map(|e| ((theta0 + theta1 * e.mileage) - e.price).powi(2)).sum::<f64>();
 		// println!("Regressed #{} to (theta0, theta1, cost): ({:32}, {:32}, {:32})", i, theta0, theta1, cost);
+
+		if let Some(epsilon) = epsilon && let Some(old_cost) = old_cost && (old_cost - cost).abs() < epsilon {
+			break;
+		}
+		old_cost = Some(cost);
+
 		i += 1 ;
 	}
 
-	(theta0, theta1)
+	let (denorm_theta0, denorm_theta1) = denormalize_model_parameters(theta0, theta1, mileage_stats, price_stats);
+	println!("Regressed to (theta0, theta1): ({}, {}) with {} iterations, learning rate = {} and epsilon = {:?}", denorm_theta0, denorm_theta1, i, learning_rate, epsilon);
+	println!("Final cost: {}", cost);
+
+	(denorm_theta0, denorm_theta1)
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -151,14 +166,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 	let learning_rate = args.learning_rate;
 	let iterations = args.iterations;
+	let epsilon = args.epsilon;
 	// println!("{:?}", entries);
 	// println!("{:?}", args);
 
-	let (normalized_entries, mileage_stats, price_stats): (Vec<Entry>, Stats, Stats) = normalize_entries(&entries);
-	// println!("{:?}", normalized_entries);
-	let (beta0, beta1) = linear_regression(&normalized_entries, learning_rate, iterations);
-	let (theta0, theta1) = denormalize_model_parameters(beta0, beta1, mileage_stats, price_stats);
-	println!("Regressed to (theta0, theta1): ({}, {}) with {} iterations and learning rate = {}", theta0, theta1, iterations, learning_rate);
+	let (theta0, theta1) = linear_regression(&entries, learning_rate, iterations, epsilon);
 
 	let weights_file_content = format!("{},{}", theta0, theta1);
 	let mut file = std::fs::OpenOptions::new().create(true).write(true).open("weights")?;
